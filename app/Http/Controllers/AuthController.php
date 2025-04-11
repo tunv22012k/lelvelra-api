@@ -2,64 +2,64 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use Illuminate\Http\Request;
+use App\Helpers\ApiResponse;
+use App\Http\Requests\LoginRequest;
+use App\Repositories\UserRepository;
 use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
+/**
+ * AuthController
+ */
 class AuthController extends Controller
 {
-    public function login(Request $request)
+    protected $userRepository;
+
+    /**
+     * __construct
+     *
+     */
+    public function __construct(UserRepository $userRepository)
+    {
+        $this->userRepository = $userRepository;
+    }
+
+    /**
+     * login
+     *
+     * @param LoginRequest $request
+     * @return void
+     */
+    public function login(LoginRequest $request)
     {
         $credentials = $request->only('email', 'password');
 
-        if (!$token = JWTAuth::attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+        // check user active
+        $user = $this->userRepository->findByEmail($request->email);
+        if (empty($user->active_flg)) {
+            return ApiResponse::forbidden(__('messages.acc_not_active'));
         }
 
-        // return $this->respondWithToken($token);
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => Auth::guard('api')->factory()->getTTL() * 60,
-        ]);
+        // check user login
+        if (!$token = JWTAuth::attempt($credentials)) {
+            return ApiResponse::unauthorized();
+        }
+
+        return ApiResponse::success([
+            'access_token'  => $token,
+            'token_type'    => 'bearer',
+            'expires_in'    => Auth::guard('api')->factory()->getTTL() * 60,
+        ], __('messages.login_susscess'));
     }
 
-    public function register(Request $request)
-    {
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-        ]);
-
-        $token = JWTAuth::fromUser($user);
-
-        // return $this->respondWithToken($token);
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => Auth::guard('api')->factory()->getTTL() * 60,
-        ]);
-    }
-
+    /**
+     * logout
+     *
+     * @return response
+     */
     public function logout()
     {
         Auth::logout();
-        return response()->json(['message' => 'Successfully logged out']);
-    }
-
-    public function me()
-    {
-        return response()->json(Auth::user());
-    }
-
-    protected function respondWithToken($token)
-    {
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60
-        ]);
+        return ApiResponse::success(null, __('messages.logout_sucess'));
     }
 }
