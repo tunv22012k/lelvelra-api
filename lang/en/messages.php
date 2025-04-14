@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'unauthorized'                      => "Bạn không có quyền truy cập vào url này!",
+    'unauthenticated'                   => "Chưa đăng nhập!",
+    'too_many_requests'                 => "too_many_requests!",
     'error_bug'                         => "Lỗi hệ thống!",
     'acc_not_active'                    => "Tài khoản chưa được kích hoạt!",
     'login_susscess'                    => "Đăng nhập thành công!",
