@@ -53,6 +53,26 @@ class AuthController extends Controller
     }
 
     /**
+     * refresh token
+     *
+     * @return void
+     */
+    public function refreshToken()
+    {
+        try {
+            $newToken = JWTAuth::parseToken()->refresh();
+
+            return ApiResponse::success([
+                'access_token'  => $newToken,
+                'token_type'    => 'bearer',
+                'expires_in'    => Auth::guard('api')->factory()->getTTL() * 60,
+            ]);
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+            return response()->json(['message' => 'Refresh token không hợp lệ'], 401);
+        }
+    }
+
+    /**
      * logout
      *
      * @return response

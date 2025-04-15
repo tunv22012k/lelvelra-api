@@ -27,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // role người bán hàng
-        Gate::define('salefmal', function (User $usr) {
+        Gate::define('salesman', function (User $usr) {
             return $usr->role === '02';
         });
 

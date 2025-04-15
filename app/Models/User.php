@@ -14,7 +14,7 @@ class User extends Authenticatable implements JWTSubject
 
     protected $guarded = [];
 
-    // protected $table = 'm_usr';
+    protected $table = 'users';
 
     public function getJWTIdentifier()
     {

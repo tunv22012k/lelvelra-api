@@ -1,13 +1,14 @@
 <?php
 
 use App\Helpers\ApiResponse;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -16,6 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__ . '/../routes/api.php',
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
+        then: function () {
+            Route::prefix('api/user')->group(base_path('routes/api.user.php'));
+            Route::prefix('api/salesman')->group(base_path('routes/api.salesman.php'));
+            Route::prefix('api/admin')->group(base_path('routes/api.admin.php'));
+        },
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([

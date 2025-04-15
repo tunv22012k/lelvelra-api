@@ -35,10 +35,14 @@ class RegisterUserRequest extends FormRequest
             ],
             'email' => [
                 'required',
-                'email'
+                'email',
+                'unique:users,email'
             ],
             'password' => [
-                'required'
+                'required',
+                'min:8',
+                'max:20',
+                'confirmed' // password_confirmation
             ],
             'sex' => [
                 'required',
@@ -46,7 +50,7 @@ class RegisterUserRequest extends FormRequest
             ],
             'role' => [
                 'required',
-                'in:01,02,03'
+                'regex:/^(01|02|03)$/'
             ],
             'phone' => [
                 'digits_between:9,11'
@@ -57,6 +61,19 @@ class RegisterUserRequest extends FormRequest
             'description' => [
                 'max:1000'
             ]
+        ];
+    }
+
+    /**
+     * messages
+     *
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'role.regex' => 'Vai trò không hợp lệ. Vui lòng nhập chính xác: 01(người dùng), 02(người bán hàng) hoặc 03(admin).',
+            'password.confirmed' => 'Mật khẩu xác nhận không khớp.',
         ];
     }
 }
