@@ -4,12 +4,15 @@ namespace App\Http\Controllers\User;
 
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\ChangePasswordRequest;
+use App\Http\Requests\User\ForgotPasswordRequest;
 use App\Http\Requests\User\RegisterUserRequest;
+use App\Http\Requests\User\ResetRandomPasswordRequest;
 use App\Repositories\UserRepository;
 use App\Services\UserService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Request;
 use Throwable;
 
 /**
@@ -79,22 +82,22 @@ class UserController extends Controller
     }
 
     /**
-     * reset password
+     * reset random password
      *
-     * @param Request $request
+     * @param ResetRandomPasswordRequest $request
      * @return void
      */
-    public function resetPassword(Request $request)
+    public function resetRandomPassword(ResetRandomPasswordRequest $request)
     {
         try {
             // call service reset password
-            $update = $this->userService->resetPassword($request['email']);
+            $update = $this->userService->resetRandomPassword($request['email']);
 
             // check data
             if ($update) {
                 return ApiResponse::success(null, __('messages.reset_password_success'));
             } else {
-                return ApiResponse::validation(__('messages.reset_password_fail'));
+                return ApiResponse::validation(__('messages.user_not_exits'));
             }
         } catch (\Throwable $ex) {
             Log::error($ex);
@@ -105,10 +108,10 @@ class UserController extends Controller
     /**
      * forgot password
      *
-     * @param Request $request
+     * @param ForgotPasswordRequest $request
      * @return void
      */
-    public function forgotPassword(Request $request)
+    public function forgotPassword(ForgotPasswordRequest $request)
     {
         try {
             // call service forgot password
@@ -119,6 +122,32 @@ class UserController extends Controller
                 return ApiResponse::success(null, __('messages.forgot_password_success'));
             } else {
                 return ApiResponse::validation(__('messages.forgot_password_fail'));
+            }
+        } catch (\Throwable $ex) {
+            Log::error($ex);
+            return ApiResponse::error(__('messages.error_bug'));
+        }
+    }
+
+    /**
+     * change password
+     *
+     * @param ChangePasswordRequest $request
+     * @return void
+     */
+    public function changePassword(ChangePasswordRequest $request)
+    {
+        try {
+            // call service change password
+            $update = $this->userService->changePassword($request['token'], $request['password']);
+
+            // check data
+            if ($update == 0) {
+                return ApiResponse::success(null, __('messages.change_password_success'));
+            } else if ($update == 1) {
+                return ApiResponse::validation(__('messages.change_password_fail'));
+            } else if ($update == 2) {
+                return ApiResponse::validation(__('messages.user_not_exits'));
             }
         } catch (\Throwable $ex) {
             Log::error($ex);

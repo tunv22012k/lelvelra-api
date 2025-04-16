@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Jobs\SendMail;
+use App\Models\PasswordResetToken;
+use App\Repositories\PasswordResetTokenRepository;
 use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -14,15 +16,19 @@ use Illuminate\Support\Str;
 class UserService extends BaseService
 {
     protected $userRepository;
+    protected $passwordResetTokenRepository;
 
     /**
      * __construct
      *
      *
      */
-    public function __construct(UserRepository $userRepository)
-    {
-        $this->userRepository = $userRepository;
+    public function __construct(
+        UserRepository $userRepository,
+        PasswordResetTokenRepository $passwordResetTokenRepository
+    ) {
+        $this->userRepository               = $userRepository;
+        $this->passwordResetTokenRepository = $passwordResetTokenRepository;
     }
 
     /**
@@ -84,14 +90,14 @@ class UserService extends BaseService
     }
 
     /**
-     * reset password
+     * reset random password
      *
      * @param string $email
      *
      * @return [type]
      *
      */
-    public function resetPassword(string $email)
+    public function resetRandomPassword(string $email)
     {
         DB::beginTransaction();
         try {
@@ -149,12 +155,17 @@ class UserService extends BaseService
 
             // check data find user by email
             if ($user) {
-                $timeChangePassword = Carbon::now()->addMinutes(30);
+                $token = Str::uuid();
+                $timeNow = Carbon::now();
 
-                // set time change password
-                $this->userRepository->update($user->id, [
-                    'email_verified_at' => $timeChangePassword
-                ]);
+                // upsear password_resets
+                PasswordResetToken::updateOrInsert(
+                    ['email'            => $user->email],
+                    [
+                        'token'         => $token,
+                        'created_at'    => $timeNow
+                    ]
+                );
 
                 // send mail
                 SendMail::dispatch(
@@ -162,7 +173,8 @@ class UserService extends BaseService
                     [
                         'first_name'        => $user->first_name,
                         'last_name'         => $user->last_name,
-                        'email_verified_at' => $timeChangePassword
+                        'email_verified_at' => $timeNow->addMinutes(30),
+                        'token'             => $token,
                     ],
                     $email,
                     "Quên mật khẩu"
@@ -175,6 +187,58 @@ class UserService extends BaseService
             } else {
                 // return page when email not exits
                 return false;
+            }
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+        }
+    }
+
+    /**
+     * change password
+     *
+     * @param string $token
+     * @param string $password
+     * @return void
+     */
+    public function changePassword(string $token, string $password)
+    {
+        DB::beginTransaction();
+        try {
+            // check token forgot password
+            $passwordResetToken = $this->passwordResetTokenRepository->findByToken($token);
+
+            if (empty($passwordResetToken) || Carbon::parse($passwordResetToken->created_at)->addMinutes(30)->isPast()) {
+                return 1;
+            }
+
+            // get user by email
+            $user = $this->userRepository->findByEmail($passwordResetToken->email);
+
+            // check data find user by email
+            if ($user) {
+                // update password
+                $this->userRepository->updatePassword($user->email, $password);
+
+                // send mail
+                SendMail::dispatch(
+                    'mail.reset-password',
+                    [
+                        'first_name'    => $user->first_name,
+                        'last_name'     => $user->last_name,
+                        'pass'          => $password
+                    ],
+                    $user->email,
+                    "Đặt lại mật khẩu"
+                );
+
+                // commit transaction
+                DB::commit();
+
+                return 0;
+            } else {
+                // return page when email not exits
+                return 2;
             }
         } catch (\Throwable $th) {
             DB::rollBack();

@@ -7,7 +7,7 @@
 <body>
     <h2>Chào {{ $first_name . ' ' . $last_name }},</h2>
 
-    <p>Hãy nhấn vào đường dẫn bên dưới để đi đến trang đặt lại mật khẩu</p>
+    <p>Bạn đã yêu cầu đặt lại mật khẩu. Nhấn vào liên kết sau:</p>
 
     <a href="https://translate.google.com">ĐẶT LẠI MẬT KHẨU TẠI ĐÂY</a>
 
