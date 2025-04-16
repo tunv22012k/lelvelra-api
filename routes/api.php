@@ -23,6 +23,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::namespace('App\Http\Controllers')->group(function () {
         Route::namespace('User')->controller('UserController')->group(function () {
             Route::get('/info_user', 'infoUser');
+            Route::get('/list_user', 'listUser');
         });
 
         Route::controller('AuthController')->group(function () {

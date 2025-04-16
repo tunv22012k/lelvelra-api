@@ -42,7 +42,7 @@ class AuthController extends Controller
 
         // check user login
         if (!$token = JWTAuth::attempt($credentials)) {
-            return ApiResponse::unauthorized();
+            return ApiResponse::unauthorized(__('messages.email_or_password_incorrect'));
         }
 
         return ApiResponse::success([

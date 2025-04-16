@@ -8,7 +8,8 @@ use App\Http\Requests\User\ChangePasswordRequest;
 use App\Http\Requests\User\ForgotPasswordRequest;
 use App\Http\Requests\User\RegisterUserRequest;
 use App\Http\Requests\User\ResetRandomPasswordRequest;
-use App\Repositories\UserRepository;
+use App\Http\Resources\UserCollection;
+use App\Http\Resources\UserResource;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,16 +21,15 @@ use Throwable;
  */
 class UserController extends Controller
 {
-    protected $userRepository;
     protected $userService;
 
     /**
      * __construct
      *
+     * @param UserService $userService
      */
-    public function __construct(UserRepository $userRepository, UserService $userService)
+    public function __construct(UserService $userService)
     {
-        $this->userRepository   = $userRepository;
         $this->userService      = $userService;
     }
 
@@ -78,7 +78,17 @@ class UserController extends Controller
      */
     public function infoUser()
     {
-        return ApiResponse::success(Auth::user());
+        return ApiResponse::success(new UserResource(Auth::user()));
+    }
+
+    /**
+     * list user
+     *
+     * @return response
+     */
+    public function listUser(Request $request)
+    {
+        return ApiResponse::success(new UserCollection($this->userService->listUser($request)));
     }
 
     /**

@@ -4,6 +4,9 @@ namespace App\Repositories;
 
 use App\Repositories\Interface\RepositoryInterface;
 
+/**
+ * BaseRepository
+ */
 abstract class BaseRepository implements RepositoryInterface
 {
     protected $model;
@@ -34,6 +37,19 @@ abstract class BaseRepository implements RepositoryInterface
         $this->model = app()->make(
             $this->getModel()
         );
+    }
+
+    /**
+     * Load relations
+     *
+     * @param  array  $relations
+     * @return self
+     */
+    public function with($relations)
+    {
+        $this->model = $this->model->with($relations);
+
+        return $this;
     }
 
     /**
@@ -113,5 +129,18 @@ abstract class BaseRepository implements RepositoryInterface
         }
 
         return false;
+    }
+
+    /**
+     * Get data of repository by pagination
+     *
+     * @param  array  $columns
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function paginate(int $limit = null, array $columns = ['*'])
+    {
+        $result = $this->model->paginate($limit, $columns);
+
+        return $result;
     }
 }

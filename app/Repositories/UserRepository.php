@@ -60,4 +60,67 @@ class UserRepository extends BaseRepository
 
         return true;
     }
+
+    /**
+     * filter
+     *
+     * @param [type] $params
+     */
+    public function filter($params)
+    {
+        $query = $this->model->query();
+
+        // filter first_name + last_name
+        if (!empty($params['name'])) {
+            $this->whereName($query, $params['name']);
+        }
+
+        // filter email
+        if (!empty($params['email'])) {
+            $this->whereEmail($query, $params['email']);
+        }
+
+        // filter address
+        if (!empty($params['address'])) {
+            $this->whereAddress($query, $params['address']);
+        }
+
+        return $query;
+    }
+
+    /**
+     * where name
+     *
+     * @param $query
+     * @param $name
+     * @return void
+     */
+    public function whereName($query, $name)
+    {
+        $query->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $name . '%']);
+    }
+
+    /**
+     * where address
+     *
+     * @param $query
+     * @param $address
+     * @return void
+     */
+    public function whereAddress($query, $address)
+    {
+        $query->where('address', 'like', '%' . $address . '%');
+    }
+
+    /**
+     * where email
+     *
+     * @param $query
+     * @param $email
+     * @return void
+     */
+    public function whereEmail($query, $email)
+    {
+        $query->where('email', 'like', '%' . $email . '%');
+    }
 }

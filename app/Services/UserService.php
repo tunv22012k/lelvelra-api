@@ -32,6 +32,19 @@ class UserService extends BaseService
     }
 
     /**
+     * list user
+     *
+     * @param $request
+     * @return void
+     */
+    public function listUser($request)
+    {
+        $query = $this->userRepository->filter($request);
+
+        return empty($request->per_page) ? $query->getAll() : $query->paginate($request->per_page);
+    }
+
+    /**
      * register user
      *
      * @param [type] $request
