@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ApiResponse;
-use App\Http\Requests\LoginRequest;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Models\RefreshToken;
+use App\Repositories\RefreshTokenRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 /**
@@ -14,14 +17,18 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 class AuthController extends Controller
 {
     protected $userRepository;
+    protected $refreshTokenRepository;
 
     /**
      * __construct
      *
+     * @param UserRepository $userRepository
+     * @param RefreshTokenRepository $refreshTokenRepository
      */
-    public function __construct(UserRepository $userRepository)
+    public function __construct(UserRepository $userRepository, RefreshTokenRepository $refreshTokenRepository)
     {
         $this->userRepository = $userRepository;
+        $this->refreshTokenRepository = $refreshTokenRepository;
     }
 
     /**
@@ -45,8 +52,17 @@ class AuthController extends Controller
             return ApiResponse::unauthorized(__('messages.email_or_password_incorrect'));
         }
 
+        // create refresh token
+        $refreshToken = Str::random(60);
+        $this->refreshTokenRepository->create([
+            'user_id'       => $user->id,
+            'token'         => $refreshToken,
+            'expires_at'    => now()->addDays(30)
+        ]);
+
         return ApiResponse::success([
             'access_token'  => $token,
+            'refresh_token' => $refreshToken,
             'token_type'    => 'bearer',
             'expires_in'    => Auth::guard('api')->factory()->getTTL() * 60,
         ], __('messages.login_susscess'));
@@ -55,21 +71,31 @@ class AuthController extends Controller
     /**
      * refresh token
      *
+     * @param RefreshToken $request
      * @return void
      */
-    public function refreshToken()
+    public function refreshToken(RefreshToken $request)
     {
-        try {
-            $newToken = JWTAuth::parseToken()->refresh();
+        $refreshTokenInput = $request->refresh_token;
 
-            return ApiResponse::success([
-                'access_token'  => $newToken,
-                'token_type'    => 'bearer',
-                'expires_in'    => Auth::guard('api')->factory()->getTTL() * 60,
-            ]);
-        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
-            return response()->json(['message' => 'Refresh token không hợp lệ'], 401);
+        // find token refresh
+        $refreshTokenModel = $this->refreshTokenRepository->findByToken($refreshTokenInput);
+
+        if (!$refreshTokenModel) {
+            return ApiResponse::unauthorized(__('messages.invalid_refresh_token'));
         }
+
+        // get user token refresh
+        $user = $refreshTokenModel->user;
+
+        // create new access token
+        $newToken = JWTAuth::fromUser($user);
+
+        return ApiResponse::success([
+            'access_token'  => $newToken,
+            'token_type'    => 'bearer',
+            'expires_in'    => Auth::guard('api')->factory()->getTTL() * 60,
+        ], __('messages.token_refreshed'));
     }
 
     /**
