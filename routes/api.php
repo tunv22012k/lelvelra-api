@@ -14,6 +14,7 @@ Route::namespace('App\Http\Controllers')->group(function () {
 
     Route::controller('AuthController')->group(function () {
         Route::post('/login', 'login');
+        Route::post('/refresh_token', 'refreshToken');
     });
 });
 
@@ -28,7 +29,6 @@ Route::middleware(['auth:api'])->group(function () {
 
         Route::controller('AuthController')->group(function () {
             Route::post('/logout', 'logout');
-            Route::post('/refresh_token', 'refreshToken');
         });
     });
 });

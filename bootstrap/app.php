@@ -18,9 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
         then: function () {
-            Route::prefix('api/user')->group(base_path('routes/api.user.php'));
-            Route::prefix('api/salesman')->group(base_path('routes/api.salesman.php'));
-            Route::prefix('api/admin')->group(base_path('routes/api.admin.php'));
+            Route::middleware('api')->prefix('api/user')->group(base_path('routes/api.user.php'));
+            Route::middleware('api')->prefix('api/salesman')->group(base_path('routes/api.salesman.php'));
+            Route::middleware('api')->prefix('api/admin')->group(base_path('routes/api.admin.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
@@ -29,6 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->group('guest', [
             \App\Http\Middleware\RedirectIfAuthenticated::class
+        ]);
+        $middleware->group('api', [
+            \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

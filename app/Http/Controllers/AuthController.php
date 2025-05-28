@@ -41,8 +41,14 @@ class AuthController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
-        // check user active
         $user = $this->userRepository->findByEmail($request->email);
+
+        // check user exit
+        if (empty($user)) {
+            return ApiResponse::unauthorized(__('auth.login.acc_not_exits'));
+        }
+
+        // check user active
         if (empty($user->active_flg)) {
             return ApiResponse::forbidden(__('messages.acc_not_active'));
         }
