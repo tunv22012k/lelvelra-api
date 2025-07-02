@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\MessageController;
 use Illuminate\Support\Facades\Route;
 
 // no auth
@@ -32,3 +33,5 @@ Route::middleware(['auth:api'])->group(function () {
         });
     });
 });
+
+Route::post('/messages', [MessageController::class, 'store']);

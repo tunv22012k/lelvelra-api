@@ -28,11 +28,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'can' => \Illuminate\Auth\Middleware\Authorize::class,
         ]);
         $middleware->group('guest', [
-            \App\Http\Middleware\RedirectIfAuthenticated::class
+            \App\Http\Middleware\RedirectIfAuthenticated::class,
+            \Illuminate\Http\Middleware\HandleCors::class,
         ]);
         $middleware->group('api', [
-            \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
+            \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \Illuminate\Http\Middleware\HandleCors::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
