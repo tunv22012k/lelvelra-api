@@ -31,7 +31,9 @@ Route::middleware(['auth:api'])->group(function () {
         Route::controller('AuthController')->group(function () {
             Route::post('/logout', 'logout');
         });
+
+        Route::controller('MessageController')->group(function () {
+            Route::post('/messages', 'store');
+        });
     });
 });
-
-Route::post('/messages', [MessageController::class, 'store']);
