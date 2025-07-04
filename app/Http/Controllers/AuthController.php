@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Models\RefreshToken;
 use App\Repositories\RefreshTokenRepository;
 use App\Repositories\UserRepository;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -77,12 +78,12 @@ class AuthController extends Controller
     /**
      * refresh token
      *
-     * @param RefreshToken $request
+     * @param Request $request
      * @return void
      */
-    public function refreshToken(RefreshToken $request)
+    public function refreshToken(Request $request)
     {
-        $refreshTokenInput = $request->refresh_token;
+        $refreshTokenInput = $request->get('refresh_token');
 
         // find token refresh
         $refreshTokenModel = $this->refreshTokenRepository->findByToken($refreshTokenInput);
